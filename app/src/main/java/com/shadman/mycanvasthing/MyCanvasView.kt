@@ -165,15 +165,15 @@ class MyCanvasView(context: Context) : View(context) {
         polygonPoints.add(Pair(currentX, currentY))
 
         extraCanvas
-        /*if (pointsCount == MAX_POINTS_ALLOWED) {
+        if (pointsCount > 1) {
             extraCanvas.drawLine(
-                polygonPoints[0].first,
-                polygonPoints[0].second,
-                polygonPoints[1].first,
-                polygonPoints[1].second,
+                polygonPoints[polygonPoints.size-2].first,
+                polygonPoints[polygonPoints.size-2].second,
+                polygonPoints[polygonPoints.size-1].first,
+                polygonPoints[polygonPoints.size-1].second,
                 tapPaint
             )
-        }*/
+        }
         invalidate()
     }
 
