@@ -111,17 +111,19 @@ class MyCanvasView(context: Context) : View(context) {
         extraBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         extraCanvas = Canvas(extraBitmap)
         extraCanvas.drawColor(backgroundColor)
+//        extraCanvas.save()
 
-        // Calculate a rectangular frame around the picture.
-        val inset = 40
-        frame = Rect(inset, inset, width - inset, height - inset)
+
+//        // Calculate a rectangular frame around the picture.
+//        val inset = 40
+//        frame = Rect(inset, inset, width - inset, height - inset)
 
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         canvas.drawBitmap(extraBitmap, 0f, 0f, null)
-        canvas.drawRect(frame, paint)
+//        canvas.drawRect(frame, paint)
 
         /*// Draw the drawing so far
         canvas.drawPath(drawing, paint)
@@ -164,15 +166,43 @@ class MyCanvasView(context: Context) : View(context) {
         pointsCount++
         polygonPoints.add(Pair(currentX, currentY))
 
-        extraCanvas
+
+        /**
+         * drawing lines, connecting dots as we are drawing it
+         */
         if (pointsCount > 1) {
-            extraCanvas.drawLine(
-                polygonPoints[polygonPoints.size-2].first,
-                polygonPoints[polygonPoints.size-2].second,
-                polygonPoints[polygonPoints.size-1].first,
-                polygonPoints[polygonPoints.size-1].second,
-                tapPaint
-            )
+            if (pointsCount > 2) {
+                extraCanvas.drawARGB(0,0,0,backgroundColor)
+//                invalidate()
+                path.moveTo(polygonPoints[0].first, polygonPoints[0].second)
+                for (i in 1 until polygonPoints.size) {
+//                    extraCanvas.drawLine(
+//                        polygonPoints[i - 1].first,
+//                        polygonPoints[i - 1].second,
+//                        polygonPoints[i].first,
+//                        polygonPoints[i].second,
+//                        tapPaint
+//                    )
+                    path.lineTo(polygonPoints[i].first,polygonPoints[i].second)
+
+                }
+//                extraCanvas.drawLine(
+//                    polygonPoints[polygonPoints.size - 1].first,
+//                    polygonPoints[polygonPoints.size - 1].second,
+//                    polygonPoints[0].first,
+//                    polygonPoints[0].second,
+//                    tapPaint
+//                )
+                path.close()
+                extraCanvas.drawPath(path,tap2Paint)
+            } else {
+                path.reset()
+                path.moveTo(polygonPoints[0].first, polygonPoints[0].second)
+                path.lineTo(
+                    polygonPoints[polygonPoints.size - 1].first,
+                    polygonPoints[polygonPoints.size - 1].second,
+                )
+            }
         }
         invalidate()
     }
@@ -189,15 +219,15 @@ class MyCanvasView(context: Context) : View(context) {
          * // approaching control point (x1,y1), and ending at (x2,y2).
          * quadTo(4 agrs) in use instead of lineTo(2 args), as quad draw smoother curves
          */
-    /*
-            path.quadTo(currentX, currentY, (motionTouchEventX + currentX) / 2, (motionTouchEventY + currentY) / 2)
-            currentX = motionTouchEventX
-            currentY = motionTouchEventY
-            // Draw the path in the extra bitmap to cache it.
-            extraCanvas.drawPath(path, paint)
-        }
-        invalidate()
-        */
+        /*
+                path.quadTo(currentX, currentY, (motionTouchEventX + currentX) / 2, (motionTouchEventY + currentY) / 2)
+                currentX = motionTouchEventX
+                currentY = motionTouchEventY
+                // Draw the path in the extra bitmap to cache it.
+                extraCanvas.drawPath(path, paint)
+            }
+            invalidate()
+            */
 
     }
 
