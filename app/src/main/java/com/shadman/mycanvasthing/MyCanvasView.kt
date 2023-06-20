@@ -268,8 +268,10 @@ class MyCanvasView(context: Context) : View(context) {
             return
         }
         // Clearing canvas, keeping the background color
-        extraCanvas.drawARGB(0, 0, 0, backgroundColor)
+        extraCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
+        invalidate()
 
+        extraCanvas.drawARGB(0, 0, 0, backgroundColor)
         path.reset()
         path.moveTo(polygonPoints[0].first, polygonPoints[0].second)
         for (i in 1 until polygonPoints.size) {
