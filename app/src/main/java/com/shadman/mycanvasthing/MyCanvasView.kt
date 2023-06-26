@@ -598,8 +598,16 @@ class MyCanvasView(context: Context) : View(context) {
 
         if (!isAnyPointTouched) {
             // polygon sides should not be more than @POLYGON_SIDES
-            if (draggableObject.size < POLYGON_SIDES) {
-                draggableObject.add(DraggableView(motionTouchEventX, motionTouchEventY))
+//            if (draggableObject.size < POLYGON_SIDES) {
+//                draggableObject.add(DraggableView(motionTouchEventX, motionTouchEventY))
+//            }
+            when (draggableObject.size) {
+                in 0..2 ->{
+                    draggableObject.add(DraggableView(motionTouchEventX, motionTouchEventY))
+                }
+                in 3 until POLYGON_SIDES -> {
+                    updatePolygon(draggableObject,DraggableView(motionTouchEventX, motionTouchEventY) )
+                }
             }
         }
         invalidate()
