@@ -11,4 +11,8 @@
     <color name="colorBackground">#edab7f</color>
     <color name="colorPaint">#7637a4</color>
     <color name="tapColorPaint">#660000</color>
+
+<!--  Draggable paint color    -->
+    <color name="pointColor">#00FFE2</color>
+
 </resources>
