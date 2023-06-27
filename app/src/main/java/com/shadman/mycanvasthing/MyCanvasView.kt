@@ -7,9 +7,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
 import androidx.core.content.res.ResourcesCompat
-import kotlin.math.hypot
-import kotlin.math.max
-import kotlin.math.min
+import kotlin.math.*
 
 
 private const val STROKE_WIDTH = 12f // has to be float
@@ -35,11 +33,14 @@ class MyCanvasView(context: Context) : View(context) {
     ///////////// Draggable Object ///////////////////////////
     private var draggableObject = mutableListOf<DraggableView>()
 
+    private var centerPoint: DraggableView? = null
     //    private lateinit var mainCanvas: Canvas
     private val circlePaint = Paint().apply {
         color = ResourcesCompat.getColor(resources, R.color.pointColor, null)
     }
 
+    private var screenHeight = 0F
+    private var screenWidth = 0F
     private enum class TouchState {
         touchDown,
         touchMove,
@@ -125,7 +126,8 @@ class MyCanvasView(context: Context) : View(context) {
         super.onSizeChanged(width, height, oldWidth, oldHeight)
         if (::extraBitmap.isInitialized) extraBitmap.recycle()
         Log.i(TAG, "smw: onSizeChanged: nwHeight: $height, olHeight: $oldHeight, nwWidth: $width, olWidth: $oldWidth")
-
+        screenHeight = height.toFloat()
+        screenWidth = width.toFloat()
         extraBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         extraCanvas = Canvas(extraBitmap)
         extraCanvas.drawColor(backgroundColor)
@@ -151,6 +153,12 @@ class MyCanvasView(context: Context) : View(context) {
 //        if (draggableObject.size > 3) {
 //            updatePolygon(draggableObject, DraggableView(motionTouchEventX, motionTouchEventY))
 //        }
+        if (centerPoint != null){
+            val p = Paint().apply {
+                color = drawTapColor
+            }
+            centerPoint!!.drawCircleAt(canvas, centerPoint!!.x, centerPoint!!.y,p)
+        }
         drawPolygon(draggableObject)
 //        canvas.drawRect(frame, paint)
 
@@ -184,7 +192,6 @@ class MyCanvasView(context: Context) : View(context) {
     }
 
     private fun updatePolygon(oldPolygonPoints: List<Pair<Float, Float>>, newPoints: Pair<Float, Float>) {
-
         // find polyPoint closest to the newPoints
         var c = extraCanvas.width.toDouble()
         var closestPointIndex = 0
@@ -202,8 +209,8 @@ class MyCanvasView(context: Context) : View(context) {
         Log.d(TAG, "smw: closest point $closestPointIndex is $c")
         //--------------------------------------
 
-        var indexBeforeClosestPoint = if (closestPointIndex > 0) (closestPointIndex - 1) else oldPolygonPoints.lastIndex
-        var indexAfterClosestPoint = if (closestPointIndex == oldPolygonPoints.lastIndex) 0 else (closestPointIndex + 1)
+        val indexBeforeClosestPoint = if (closestPointIndex > 0) (closestPointIndex - 1) else oldPolygonPoints.lastIndex
+        val indexAfterClosestPoint = if (closestPointIndex == oldPolygonPoints.lastIndex) 0 else (closestPointIndex + 1)
         Log.d(TAG, "smw: indexBeforeClosestPoint is $indexBeforeClosestPoint")
         Log.d(TAG, "smw: indexAfterClosestPoint is $indexAfterClosestPoint")
 
@@ -302,6 +309,107 @@ class MyCanvasView(context: Context) : View(context) {
         path.close()
         extraCanvas.drawPath(path, tap2Paint)
         invalidate()
+    }
+
+    private fun sortPointsCW(pointArray: MutableList<DraggableView>)/*: List<DraggableView>*/ {
+//        // set Y
+//        for (point in pointArray) {
+//            point.y = screenHeight - point.y
+//        }
+
+        // find center
+        var pxTotal=0F
+        var pyTotal=0F
+        for (point in pointArray) {
+            pxTotal += point.x
+            pyTotal += point.y
+        }
+        val centerX = pxTotal/pointArray.size
+        val centerY = pyTotal/pointArray.size
+        centerPoint = DraggableView(centerX,centerY)
+
+        Log.i(TAG, "smw: center at x:$centerX y:$centerY")
+//        // translate point
+//        for (point in pointArray) {
+//            point.x = point.x - centerX
+//            point.y = point.y - centerY
+//        }
+
+        // sort angle (distance also if necessary)
+        var loop = true
+        for (j in 0 until pointArray.size - 1) {
+            var looping = false
+            for (i in 0 until pointArray.size - 1) {
+                Log.i(
+                    TAG,
+                    "smw: comparing points (${pointArray[i].x},${pointArray[i].y}) & (${pointArray[i + 1].x},${pointArray[i + 1].y})"
+                )
+                val res = compareLess(pointArray[i], pointArray[i + 1], centerPoint!!)
+                Log.i(TAG, "smw: compared result: $res")
+                if (res) {
+                    val t = pointArray[i]
+                    pointArray[i] = pointArray[i + 1]
+                    pointArray[i + 1] = t
+                    looping = res
+                }
+
+//            val deltaY = point.y - center
+//            val deltaX = point.x - centerX
+//            var rad = atan2(deltaY,deltaX)
+//            if (rad <= 0){
+//                rad = (2 * Math.PI + rad).toFloat()
+//            }
+//            Log.i(TAG,"smw: angle $i :${Math.toDegrees(rad.toDouble())}")
+//            Log.i(TAG,"smw: angle $i :${Math.toDegrees(atan2(deltaY.toDouble(), deltaX.toDouble()))}")
+            }
+            if (!looping) {
+                break
+            }
+        }
+
+//        // anti-translate
+        for ((i,point) in pointArray.withIndex()) {
+            Log.i(TAG, "smw afer: $i (${point.x}, ${point.y})")
+//            point.x = point.x + centerX
+//            point.y = point.y + centerY
+        }
+        for ((i,point) in pointArray.withIndex()) {
+            Log.i(TAG, "smw perc: $i (${point.x/screenWidth}, ${point.y/screenHeight})")
+        }
+
+        //return
+//        return pointArray
+    }
+    fun compareLess(pointA: DraggableView, pointB: DraggableView, center: DraggableView): Boolean {
+
+        if (pointA.x - center.x >= 0 && pointB.x - center.x < 0) {
+            return true
+        }
+        if (pointA.x - center.x < 0 && pointB.x - center.x == 0F) {
+            return true
+        }
+        if (pointA.x - center.x == 0F && pointB.x - center.x == 0F) {
+            if (pointA.x - center.x == 0F && pointB.x - center.x == 0F) {
+                return pointA.y > pointB.y
+            }
+            return pointB.y > pointA.y
+        }
+
+        // compute the cross product of vectors (center -> a) x (center -> b)
+        val det = (pointA.x - center.x) * (pointB.y - center.y) - (pointB.x - center.x) * (pointA.y - center.y)
+        if (det < 0) {
+            return true
+        }
+        if (det > 0) {
+            return false
+        }
+
+        // points a and b are on the same line from the center
+        // check which point is closer to the center
+
+        val distance1 = (pointA.x - center.x) * (pointA.x - center.x) + (pointA.y -  center.y) * (pointA.y - center.y)
+        val distance2 = (pointB.x - center.x) * (pointB.x - center.x) + (pointB.y -  center.y) * (pointB.y - center.y)
+        return distance1 > distance2
     }
 
     // @author https://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/
@@ -527,7 +635,7 @@ class MyCanvasView(context: Context) : View(context) {
         }
         // do if move is detected
         touchState = TouchState.touchMove
-        Log.i(TAG, "smw: touchMove at ${motionTouchEventX} , $motionTouchEventY")
+        Log.i(TAG, "smw: touchMove at $motionTouchEventX , $motionTouchEventY")
 //        for ((i, points) in draggableObject.withIndex()) {
 //            if (points.getActionDown()) {
 //                draggableObject[i].setPosition(motionTouchEventX, motionTouchEventY)
@@ -589,7 +697,7 @@ class MyCanvasView(context: Context) : View(context) {
 
         if (touchedItemIndex >= 0) {
             // if any existing point is touched, remove it
-            // if no. of point is <= 3 , then don't remove the point
+            // if no. of point is <= 3, then don't remove the point
             if (draggableObject.size > 3) {
                 draggableObject.removeAt(touchedItemIndex)
             }
@@ -602,15 +710,22 @@ class MyCanvasView(context: Context) : View(context) {
 //                draggableObject.add(DraggableView(motionTouchEventX, motionTouchEventY))
 //            }
             when (draggableObject.size) {
-                in 0..2 ->{
+                in 0..2 -> {
                     draggableObject.add(DraggableView(motionTouchEventX, motionTouchEventY))
+                    invalidate()
                 }
                 in 3 until POLYGON_SIDES -> {
                     updatePolygon(draggableObject,DraggableView(motionTouchEventX, motionTouchEventY) )
+                    invalidate()
+                }
+                in POLYGON_SIDES..100 -> {
+                    if (draggableObject.size >= POLYGON_SIDES) {
+                        sortPointsCW(draggableObject)
+                    }
+                    invalidate()
                 }
             }
         }
-        invalidate()
 
     }
 

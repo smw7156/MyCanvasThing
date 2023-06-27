@@ -35,8 +35,8 @@ class DraggableView(var x: Float, var y: Float) {
     }
 
     fun isTouched(x: Float, y: Float): Boolean {
-        Log.i(TAG, "smw: checking isTouched X(${this.x}--${this.x + (circleRadius*2)}")
-        Log.i(TAG, "smw: checking isTouched Y(${this.y}--${this.y + (circleRadius*2)}")
+//        Log.i(TAG, "smw: checking isTouched X(${this.x}--${this.x + (circleRadius*2)}")
+//        Log.i(TAG, "smw: checking isTouched Y(${this.y}--${this.y + (circleRadius*2)}")
         val isXInside = x > (this.x - circleRadius) && x < (this.x + (circleRadius*3))
         val isYInside = y > (this.y - circleRadius) && y < (this.y + (circleRadius*3))
         return isXInside && isYInside
