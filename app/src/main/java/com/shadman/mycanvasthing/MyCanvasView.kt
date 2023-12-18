@@ -145,7 +145,7 @@ class MyCanvasView(context: Context) : View(context) {
 //        mainCanvas = canvas
 //        Log.i(TAG,"smw: onDraw called") // on draw is called after every one events is triggered
         canvas.drawBitmap(extraBitmap, 0f, 0f, null)
-
+        Log.i(TAG,"smw: onDraw called")
         if (draggableObject.isNullOrEmpty()) return
         for (point in draggableObject) {
             point.drawCircleAt(canvas, point.x, point.y, circlePaint)
@@ -308,7 +308,7 @@ class MyCanvasView(context: Context) : View(context) {
         }
         path.close()
         extraCanvas.drawPath(path, tap2Paint)
-        invalidate()
+//        invalidate()
     }
 
     private fun sortPointsCW(pointArray: MutableList<DraggableView>)/*: List<DraggableView>*/ {
@@ -625,7 +625,6 @@ class MyCanvasView(context: Context) : View(context) {
     }
 
     private fun touchMove() {
-
         // Working code
         val dx = Math.abs(motionTouchEventX - currentX)
         val dy = Math.abs(motionTouchEventY - currentY)
